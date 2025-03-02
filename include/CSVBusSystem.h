@@ -8,6 +8,8 @@ class CCSVBusSystem : public CBusSystem{
     private:
         struct SImplementation;
         std::unique_ptr< SImplementation > DImplementation;
+        std::vector<std::shared_ptr<CBusSystem::SStop>> stops;
+        std::vector<std::shared_ptr<CBusSystem::SStop>> routes;
     public:
         CCSVBusSystem(std::shared_ptr< CDSVReader > stopsrc, std::shared_ptr< CDSVReader > routesrc);
         ~CCSVBusSystem();
