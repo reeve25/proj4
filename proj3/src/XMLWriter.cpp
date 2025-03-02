@@ -1,5 +1,5 @@
-// #include "../include/XMLWriter.h"
-#include "XMLWriter.h"
+#include "../include/XMLWriter.h"
+// #include "XMLWriter.h"
 #include <vector>
 #include <string>
 
