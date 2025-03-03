@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Iinclude
+CXXFLAGS = -std=c++17 -Wall -I../include
 LDFLAGS = -lgtest -lgtest_main -pthread -lexpat
 
 # Directories
