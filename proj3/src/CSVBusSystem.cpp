@@ -49,7 +49,7 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
     std::vector<std::string> row;  
 
     if (stopsrc) {
-        while (!stopsrc->End()) {
+        while (stopsrc->ReadRow(row)) {
             try {
                 auto stop = std::make_shared<SStop>();
                 stop->id_ = std::stoul(row[0]);  
