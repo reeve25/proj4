@@ -8,36 +8,33 @@
 
 class CCSVBusSystem::SStop : public CBusSystem::SStop {
 public:
-    CBusSystem::TStopID id_;
+
     CStreetMap::TNodeID nodeId_; 
+    CBusSystem::TStopID id_;
 
-    TStopID ID() const noexcept override {
-        return id_;
-    }
+    CStreetMap::TNodeID NodeID() const noexcept override { return nodeId_; }
 
-    CStreetMap::TNodeID NodeID() const noexcept override {
-        return nodeId_;
-    }
+    TStopID ID() const noexcept override { return id_; }
 };
 
-class CCSVBusSystem::SRoute : public CBusSystem::SRoute {
+struct CCSVBusSystem::SRoute : public CBusSystem::SRoute {
 public:
-    std::string RouteName;
-    std::vector<TStopID> RouteStops;  
+    std::string name_;
+    std::vector<TStopID> stopIds_;  
 
     std::string Name() const noexcept override {
-        return RouteName;
+        return name_;
     }
 
     std::size_t StopCount() const noexcept override {
-        return RouteStops.size();
+        return stopIds_.size();
     }
 
     TStopID GetStopID(std::size_t index) const noexcept override {
-        if (index >= RouteStops.size()) {
+        if (index >= stopIds_.size()) {
             return CBusSystem::InvalidStopID;  
         }
-        return RouteStops[index];
+        return stopIds_[index];
     }
 };
 
@@ -78,9 +75,9 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
                     auto& route = tempRoutes[routeName];  
                     if (!route) {
                         route = std::make_shared<SRoute>();
-                        route->RouteName = routeName;
+                        route->name_ = routeName;
                     }
-                    route->RouteStops.push_back(stopID);  
+                    route->stopIds_.push_back(stopID);  
                 } catch (const std::exception& e) {
                     //handle error
                     std::cerr << "Exception caught: " << e.what() << "\n";
