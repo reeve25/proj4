@@ -1,92 +1,26 @@
+
+
 # Project3
 
 ## Overview
 
-This project is a C++ application that includes a bus system simulator and other utilities. The project uses Google Test for unit testing and includes various components such as CSV readers and writers, XML processing, and string utilities.
+Project3 is a C++ program that simulates a bus system and provides tools for handling data. It includes features for reading and writing CSV and XML files, as well as basic string processing. The program is built in a modular way, making it easy to expand and modify.
+
+The main goal of Project3 is to create a reliable system for working with bus data. It reads information from CSV files, processes it, and allows for various types of analysis. It also includes XML handling and string utilities to support different tasks.
+
+### Main Components
+
+1. **CSVBusSystem**: Reads and processes bus stop and route data from CSV files. It provides functions to access and modify this data, focusing on speed and efficiency.
+
+2. **StringUtils**: A set of tools for handling text. It includes functions for cutting, changing case, trimming spaces, and more.
+
+3. **XMLReader and XMLWriter**: These classes allow reading and writing XML data, including handling attributes and nested elements.
+
+4. **Unit Testing**: The project uses Google Test to check that everything works correctly. Tests cover all major features.
 
 ## Features
 
-- CSVBusSystem: Simulates a bus system using CSV input data.
-- StringUtils: Provides various string manipulation utilities.
-- XMLReader and XMLWriter: Handles reading and writing XML data.
-- Unit Testing: Uses Google Test for comprehensive testing of all components.
-
-## Setup
-
-### Prerequisites
-
-- C++17 compatible compiler (e.g., g++)
-- CMake (optional, for build automation)
-- Google Test framework
-
-### Installation
-
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/reeve25/proj3.git
-    cd proj3
-    ```
-
-2. Compile the project:
-    ```sh
-    make
-    ```
-
-3. Run the tests:
-    ```sh
-    make test
-    ```
-
-## Usage
-
-### Running the Application
-
-To run the application, execute the compiled binary:
-```sh
-./bin/runtests
-```
-
-### Running Tests
-
-To run the unit tests, execute the following command:
-```sh
-make test
-```
-
-## Project Structure
-
-```
-proj3/
-├── include/                # Header files
-│   ├── CSVBusSystem.h
-│   ├── StringUtils.h
-│   ├── XMLReader.h
-│   └── XMLWriter.h
-├── src/                    # Source files
-│   ├── CSVBusSystem.cpp
-│   ├── StringUtils.cpp
-│   ├── XMLReader.cpp
-│   └── XMLWriter.cpp
-├── testsrc/                # Test source files
-│   ├── CSVBusSystemTest.cpp
-│   ├── StringUtilsTest.cpp
-│   ├── OpenStreetMapTest.cpp
-│   └── XMLTest.cpp
-├── Makefile                # Makefile for building the project
-└── README.md               # Project README
-```
-
-## Contribution Guidelines
-
-We welcome contributions! Please follow these steps to contribute:
-
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/your-feature`).
-3. Commit your changes (`git commit -am 'Add new feature'`).
-4. Push to the branch (`git push origin feature/your-feature`).
-5. Create a new Pull Request.
-
-## Acknowledgments
-
-- Google Test for the testing framework.
-- Any other libraries or tools you used.
+- **Bus System Simulation**: Reads bus stops and routes from CSV files and allows modifications.
+- **String Processing**: Provides basic text handling functions.
+- **XML Handling**: Supports reading and writing XML files.
+- **Testing**: Uses Google Test to verify correctness.
