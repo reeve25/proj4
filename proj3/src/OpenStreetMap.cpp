@@ -1,3 +1,4 @@
+#include "OpenStreetMap.h"    // includ the openstreetmap header  
 #include "XMLReader.h"        // includ the xml reader header for parsing xml  
 #include <memory>             // includ memory for smart pointers like shared_ptr and unique_ptr  
 #include <vector>             // includ vector for dynamic arrays  
