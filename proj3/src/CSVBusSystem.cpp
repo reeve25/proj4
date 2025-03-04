@@ -49,17 +49,15 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
     std::vector<std::string> row;  
 
     if (stopsrc) {
-        while (stopsrc->ReadRow(row)) {
-            if (row.size() >= 2) {  
-                try {
-                    auto stop = std::make_shared<SStop>();
-                    stop->id_ = std::stoul(row[0]);  
-                    stop->nodeId_ = std::stoul(row[1]);
-                    DImplementation->stopmap[stop->id_] = stop; 
-                    DImplementation->stops.push_back(stop);  
-                } catch (const std::exception& e) {
-                    std::cerr << "Exception caught: " << e.what() << "\n";
-                }
+        while (!stopsrc->End()) {
+            try {
+                auto stop = std::make_shared<SStop>();
+                stop->id_ = std::stoul(row[0]);  
+                stop->nodeId_ = std::stoul(row[1]);
+                DImplementation->stopmap[stop->id_] = stop; 
+                DImplementation->stops.push_back(stop);  
+            } catch (const std::exception& e) {
+                std::cerr << "Exception caught: " << e.what() << "\n";
             }
         }
     }
