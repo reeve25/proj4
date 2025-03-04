@@ -150,7 +150,8 @@ COpenStreetMap::COpenStreetMap(std::shared_ptr<CXMLReader> src) {
                 cur_way = std::make_shared<SImplementation::SWayImpl>();
                 cur_node = nullptr;  // reset the node pointer  
                 // process each attribute for this way element  
-                for (const auto &attribute : xml_entity.DAttributes) {
+                for (int i = 0; i < xml_entity.DAttributes.size(); ++i) {
+                    const auto &attribute = xml_entity.DAttributes[i];
                     if (attribute.first == "id") {
                         cur_way->way_identifier = std::stoull(attribute.second);
                     } else {
