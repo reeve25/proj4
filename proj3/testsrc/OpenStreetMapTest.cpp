@@ -12,6 +12,7 @@ public:
 
     MockXMLReader() : CXMLReader(nullptr), CurrentIndex(0) {}
 
+    // Ensure the method signature matches the base class
     bool ReadEntity(SXMLEntity &entity, bool skipcdata = false) override {
         if (CurrentIndex < Data.size()) {
             entity = Data[CurrentIndex++];
