@@ -1,93 +1,103 @@
-#include "../include/CSVBusSystem.h"
-#include "../include/BusSystem.h"
+#include "CSVBusSystem.h"
+#include "DSVReader.h"
+#include <memory>
+#include <vector>
+#include <string>
+#include <unordered_map>
 #include <iostream>
 
-struct CStop : public CBusSystem::SStop {
+class CCSVBusSystem::SStop : public CBusSystem::SStop {
 public:
-    CStop(CBusSystem::TStopID id, CStreetMap::TNodeID nodeId) : id_(id), nodeId_(nodeId) {}
+    TStopID StopID;
+    CStreetMap::TNodeID NodeIDValue;
 
-    CBusSystem::TStopID ID() const noexcept override { return id_; }
-    CStreetMap::TNodeID NodeID() const noexcept override { return nodeId_; }
-
-private:
-    CBusSystem::TStopID id_;
-    CStreetMap::TNodeID nodeId_;
-};
-
-// Define the concrete CRoute class
-struct CRoute : public CBusSystem::SRoute {
-public:
-    CRoute(const std::string& name, CBusSystem::TStopID stopId) : name_(name), stopIds_({stopId}) {} // Initialize with a single stop ID
-
-    std::string Name() const noexcept override { return name_; }
-    std::size_t StopCount() const noexcept override { return stopIds_.size(); }
-    CBusSystem::TStopID GetStopID(std::size_t index) const noexcept override {
-        if (index < stopIds_.size()) {
-            return stopIds_[index];
-        } else {
-            return CBusSystem::InvalidStopID;
-        }
+    TStopID ID() const noexcept override {
+        return StopID;
     }
 
-private:
-    std::string name_;
-    std::vector<CBusSystem::TStopID> stopIds_; // Store stop IDs in a vector
+    CStreetMap::TNodeID NodeID() const noexcept override {
+        return NodeIDValue;
+    }
+};
+
+class CCSVBusSystem::SRoute : public CBusSystem::SRoute {
+public:
+    std::string RouteName;
+    std::vector<TStopID> RouteStops;  
+
+    std::string Name() const noexcept override {
+        return RouteName;
+    }
+
+    std::size_t StopCount() const noexcept override {
+        return RouteStops.size();
+    }
+
+    TStopID GetStopID(std::size_t index) const noexcept override {
+        if (index >= RouteStops.size()) {
+            return CBusSystem::InvalidStopID;  
+        }
+        return RouteStops[index];
+    }
 };
 
 struct CCSVBusSystem::SImplementation {
-    // ... SImplementation members ...
     std::shared_ptr<CDSVReader> stopReader;
     std::shared_ptr<CDSVReader> routeReader;
-    std::vector<std::shared_ptr<CStop>> stops;
-    std::vector<std::shared_ptr<CRoute>> routes;
-    SImplementation() {} 
+    std::vector<std::shared_ptr<SStop>> stops;  
+    std::unordered_map<TStopID, std::shared_ptr<SStop>> stopMap; 
+    std::vector<std::shared_ptr<SRoute>> routes; 
+    std::unordered_map<std::string, std::shared_ptr<SRoute>> routeMap;  
 };
 
-
-CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_ptr<CDSVReader> routesrc)
-    : DImplementation(std::make_unique<SImplementation>()) { // Initialize DImplementation
-
+CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_ptr<CDSVReader> routesrc) 
+    : DImplementation(std::make_unique<SImplementation>()) {
+    
     DImplementation->stopReader = stopsrc;
     DImplementation->routeReader = routesrc;
-    //std::vector<std::shared_ptr<CStop>> stops;
-    //std::vector<std::shared_ptr<CRoute>> routes;
-
-    //Reading from first row of both routes and stops so I skip the first row 
-    try {
-        std::vector<std::string> rowStop;
-        stopsrc->ReadRow(rowStop);
-        std::vector<std::string> rowRoute;
-        routesrc->ReadRow(rowRoute);
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "could not read routes: " << e.what() << std::endl;
-    }
-    //Now reading from the rest and populating my stops and routes
-    while (!stopsrc->End()) {
-        try {
-            std::vector<std::string> row;
-            stopsrc->ReadRow(row);
-            TStopID stopId = std::stoul(row[0]);
-            CStreetMap::TNodeID nodeId = std::stoul(row[1]);
-            auto stop = std::make_shared<CStop>(stopId, nodeId);
-            DImplementation->stops.push_back(stop);
-        } catch (const std::invalid_argument& e) {
-            std::cerr << "could not read stops: " << e.what() << std::endl;
+    std::vector<std::string> row;  
+    
+    if (stopsrc) {
+        while (stopsrc->ReadRow(row)) {
+            if (row.size() >= 2) {  
+                try {
+                    auto stop = std::make_shared<SStop>();
+                    stop->StopID = std::stoul(row[0]);
+                    stop->NodeIDValue = std::stoul(row[1]);
+                    DImplementation->stopMap[stop->StopID] = stop; 
+                    DImplementation->stops.push_back(stop);  
+                } catch (const std::exception& e) {
+                    std::cerr << "Exception caught: " << e.what() << "\n";
+                }
+            }
         }
     }
-    while (!routesrc->End()) {
-        try {
-            std::vector<std::string> row;
-            stopsrc->ReadRow(row);
-            std::string name = row[0];
-            TStopID stopId = std::stoul(row[1]);
-            auto route = std::make_shared<CRoute>(name, stopId);
-            DImplementation->routes.push_back(route);
-        } catch (const std::invalid_argument& e) {
-            std::cerr << "could not read routes: " << e.what() << std::endl;
+
+    if (routesrc) {
+        std::unordered_map<std::string, std::shared_ptr<SRoute>> tempRoutes;  
+        while (routesrc->ReadRow(row)) {
+            if (row.size() >= 2) {  
+                try {
+                    std::string routeName = row[0];
+                    TStopID stopID = std::stoul(row[1]);
+                    auto& route = tempRoutes[routeName];  
+                    if (!route) {
+                        route = std::make_shared<SRoute>();
+                        route->RouteName = routeName;
+                    }
+                    route->RouteStops.push_back(stopID);  
+                } catch (const std::exception& e) {
+                    std::cerr << "Exception caught: " << e.what() << "\n";
+                }
+            }
+        }
+
+        for (const auto& pair : tempRoutes) {
+            DImplementation->routeMap[pair.first] = pair.second;
+            DImplementation->routes.push_back(pair.second);  
         }
     }
 }
-
 CCSVBusSystem::~CCSVBusSystem() = default;
 
 std::size_t CCSVBusSystem::StopCount() const noexcept {
@@ -107,10 +117,9 @@ std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByIndex(std::size_t index)
 }
 
 std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByID(TStopID id) const noexcept {
-    for (std::size_t i = 0; i < DImplementation->stops.size(); i++) {
-        if (DImplementation->stops[i]->ID() == id) {
-            return DImplementation->stops[i];
-        }
+    auto currStop = DImplementation->stopMap.find(id);
+    if (currStop != DImplementation->stopMap.end()) {
+        return currStop->second;
     }
     return nullptr;
 }
@@ -123,13 +132,35 @@ std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByIndex(std::size_t inde
     }
 }
 
-std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string& name) const noexcept {
-    for (std::size_t i = 0; i < DImplementation->routes.size(); i++) {
-        if (DImplementation->routes[i]->Name() == name) {
-            return DImplementation->routes[i];
-        }
+std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string &name) const noexcept {
+    auto it = DImplementation->routeMap.find(name);
+    if (it != DImplementation->routeMap.end()) {
+        return it->second;
     }
     return nullptr;
+}
+
+std::ostream &operator<<(std::ostream &os, const CCSVBusSystem &bussystem) {
+    os << "amt of stops: " << std::to_string(bussystem.StopCount()) << "\n";
+    os << "amt of routes: " << std::to_string(bussystem.RouteCount()) << "\n";
+    
+    for (size_t i = 0; i < bussystem.StopCount(); i++) {
+        auto stop = bussystem.StopByIndex(i);
+        if (stop) {
+            os << "index " << std::to_string(i) << " ID: " << std::to_string(stop->ID()) <<
+                  " NodeID: " << std::to_string(stop->NodeID()) << "\n";
+        }
+    }
+    
+    for (size_t i = 0; i < bussystem.RouteCount(); i++) {
+        auto route = bussystem.RouteByIndex(i);
+        if (route) {
+            os << "index route " << std::to_string(i) << " name: " << route->Name() +
+                  " amount of stops: " << std::to_string(route->StopCount()) << "\n";
+        }
+    }
+    
+    return os;
 }
 
 // CCSVBusSystem member functions
