@@ -22,19 +22,16 @@ public:
     std::string name_;
     std::vector<TStopID> stopIds_;  
 
-    std::string Name() const noexcept override {
-        return name_;
-    }
+    std::string Name() const noexcept override { return name_; }
 
-    std::size_t StopCount() const noexcept override {
-        return stopIds_.size();
-    }
+    std::size_t StopCount() const noexcept override { return stopIds_.size(); }
 
-    TStopID GetStopID(std::size_t index) const noexcept override {
-        if (index >= stopIds_.size()) {
-            return CBusSystem::InvalidStopID;  
+    CBusSystem::TStopID GetStopID(std::size_t index) const noexcept override {
+        if (index < stopIds_.size()) {
+            return stopIds_[index];
+        } else {
+            return CBusSystem::InvalidStopID;
         }
-        return stopIds_[index];
     }
 };
 
