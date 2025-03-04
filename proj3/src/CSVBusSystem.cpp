@@ -64,13 +64,13 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
     }
 
     if (routesrc) {
-        std::unordered_map<std::string, std::shared_ptr<SRoute>> tempRoutes;  
+        std::unordered_map<std::string, std::shared_ptr<SRoute>> temporaryRoutes;  
         while (routesrc->ReadRow(row)) {  
             if (row.size() >= 2) {  
                 try {
                     std::string routeName = row[0];  
                     TStopID stopID = std::stoul(row[1]);  
-                    auto& route = tempRoutes[routeName];  
+                    auto& route = temporaryRoutes[routeName];  
                     if (!route) {
                         route = std::make_shared<SRoute>();
                         route->name_ = routeName;
@@ -83,9 +83,9 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
             }
         }
 
-        for (const auto& pair : tempRoutes) {
-            DImplementation->routemap[pair.first] = pair.second;
-            DImplementation->routes.push_back(pair.second);  
+        for (auto it = temporaryRoutes.begin(); it != temporaryRoutes.end(); ++it) {
+            DImplementation->routemap[it->first] = it->second;
+            DImplementation->routes.push_back(it->second);  
         }
     }
 }
