@@ -103,10 +103,11 @@ std::size_t CCSVBusSystem::RouteCount() const noexcept {
 
 // return stops by index
 std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByIndex(std::size_t index) const noexcept {
-    if (index < DImplementation->stops.size()) {
+    if (index >= DImplementation->stops.size()) {
+        return nullptr;
+    } else {
         return DImplementation->stops[index];
     }
-    return nullptr;
 }
 
 // return stopmap by id
@@ -120,10 +121,11 @@ std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByID(TStopID id) const noe
 
 // return routes by their index
 std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByIndex(std::size_t index) const noexcept {
-    if (index < DImplementation->routes.size()) {
+    if (index >= DImplementation->routes.size()) {
+        return nullptr;
+    } else {
         return DImplementation->routes[index];
     }
-    return nullptr;
 }
 
 std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string &name) const noexcept {
