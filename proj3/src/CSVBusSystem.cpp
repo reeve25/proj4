@@ -41,10 +41,11 @@ struct CCSVBusSystem::SImplementation {
     std::unordered_map<TStopID, std::shared_ptr<SStop>> stopmap;
     std::vector<std::shared_ptr<SRoute>> routes;
     std::unordered_map<std::string, std::shared_ptr<SRoute>> routemap;  
+    //SImplementation() {} 
 };
 
-CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_ptr<CDSVReader> routesrc) {
-    DImplementation = std::make_unique<SImplementation>();
+CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_ptr<CDSVReader> routesrc)    
+    : DImplementation(std::make_unique<SImplementation>()) {
     std::vector<std::string> row;  
 
     if (stopsrc) {
