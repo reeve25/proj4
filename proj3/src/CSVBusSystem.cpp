@@ -39,10 +39,11 @@ public:
 };
 
 struct CCSVBusSystem::SImplementation {
-    std::vector<std::shared_ptr<SStop>> StopsByIndex;
-    std::unordered_map<TStopID, std::shared_ptr<SStop>> Stops;
-    std::vector<std::shared_ptr<SRoute>> RoutesByIndex;
-    std::unordered_map<std::string, std::shared_ptr<SRoute>> Routes;  
+    // ... SImplementation members ...
+    std::vector<std::shared_ptr<SStop>> stops;
+    std::unordered_map<TStopID, std::shared_ptr<SStop>> stopmap;
+    std::vector<std::shared_ptr<SRoute>> routes;
+    std::unordered_map<std::string, std::shared_ptr<SRoute>> routemap;  
 };
 
 CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_ptr<CDSVReader> routesrc) {
@@ -56,8 +57,8 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
                     auto stop = std::make_shared<SStop>();
                     stop->id_ = std::stoul(row[0]);  
                     stop->nodeId_ = std::stoul(row[1]);
-                    DImplementation->Stops[stop->id_] = stop; 
-                    DImplementation->StopsByIndex.push_back(stop);  
+                    DImplementation->stopmap[stop->id_] = stop; 
+                    DImplementation->stops.push_back(stop);  
                 } catch (const std::exception& e) {
                     std::cerr << "Exception caught: " << e.what() << "\n";
                 }
@@ -80,14 +81,14 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
                     route->stopIds_.push_back(stopID);  
                 } catch (const std::exception& e) {
                     //handle error
-                    std::cerr << "Exception caught: " << e.what() << "\n";
+                    std::cerr << "exception caught: " << e.what() << "\n";
                 }
             }
         }
 
         for (const auto& pair : tempRoutes) {
-            DImplementation->Routes[pair.first] = pair.second;
-            DImplementation->RoutesByIndex.push_back(pair.second);  
+            DImplementation->routemap[pair.first] = pair.second;
+            DImplementation->routes.push_back(pair.second);  
         }
     }
 }
@@ -96,25 +97,25 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
 CCSVBusSystem::~CCSVBusSystem() = default;
 
 std::size_t CCSVBusSystem::StopCount() const noexcept {
-    return DImplementation->StopsByIndex.size();
+    return DImplementation->stops.size();
 }
 
 std::size_t CCSVBusSystem::RouteCount() const noexcept {
-    return DImplementation->RoutesByIndex.size();
+    return DImplementation->routes.size();
 }
 
 // return stops by index
 std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByIndex(std::size_t index) const noexcept {
-    if (index < DImplementation->StopsByIndex.size()) {
-        return DImplementation->StopsByIndex[index];
+    if (index < DImplementation->stops.size()) {
+        return DImplementation->stops[index];
     }
     return nullptr;
 }
 
-// return stops by id
+// return stopmap by id
 std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByID(TStopID id) const noexcept {
-    auto it = DImplementation->Stops.find(id);
-    if (it != DImplementation->Stops.end()) {
+    auto it = DImplementation->stopmap.find(id);
+    if (it != DImplementation->stopmap.end()) {
         return it->second;
     }
     return nullptr;
@@ -122,15 +123,15 @@ std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByID(TStopID id) const noe
 
 // return routes by their index
 std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByIndex(std::size_t index) const noexcept {
-    if (index < DImplementation->RoutesByIndex.size()) {
-        return DImplementation->RoutesByIndex[index];
+    if (index < DImplementation->routes.size()) {
+        return DImplementation->routes[index];
     }
     return nullptr;
 }
 
 std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string &name) const noexcept {
-    auto it = DImplementation->Routes.find(name);
-    if (it != DImplementation->Routes.end()) {
+    auto it = DImplementation->routemap.find(name);
+    if (it != DImplementation->routemap.end()) {
         return it->second;
     }
     return nullptr;
