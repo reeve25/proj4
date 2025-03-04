@@ -1,160 +1,216 @@
-#include "OpenStreetMap.h"
-#include "XMLReader.h"
-#include <memory>
-#include <deque>
-#include <string>
-#include <unordered_map>
+#include "OpenStreetMap.h"    // header for COpenStreetMap class
+#include "XMLReader.h"        // header for XML parsing functionality
+#include <memory>             // for smart pointers like std::shared_ptr and std::unique_ptr
+#include <vector>             // dynamic arrays for storing nodes and ways
+#include <string>             // for string handling
+#include <unordered_map>      // for fast attribute lookup
+#include <iterator>           // for std::advance
 
-// Main internal data holder
+// Define the implementation structure with internal classes.
 struct COpenStreetMap::SImplementation {
+    // Forward declarations of the internal classes.
     class SNodeImpl;
     class SWayImpl;
-    
-    std::deque<std::shared_ptr<SNodeImpl>> node_storage;  // changed container
-    std::deque<std::shared_ptr<SWayImpl>> path_storage;    // different name
+    // Containers for nodes and ways.
+    std::vector<std::shared_ptr<SNodeImpl>> nodesCollection;
+    std::vector<std::shared_ptr<SWayImpl>> waysCollection;
 };
 
-// Node implementation - same class name, different internals
+// Implementation of the node class, inheriting from CStreetMap::SNode.
 class COpenStreetMap::SImplementation::SNodeImpl : public CStreetMap::SNode {
-    unsigned long long uid;  // changed var name
-    std::pair<double, double> coordinates;
-    std::unordered_map<std::string, std::string> metadata;  // renamed
-    
 public:
-    TNodeID ID() const noexcept override { return uid; }
-    
+    TNodeID nodeIdentifier;  // Unique node ID
+    TLocation coordinates;   // Latitude and longitude
+    std::unordered_map<std::string, std::string> attrMap; // Attributes for the node
+
+    TNodeID ID() const noexcept override {
+        return nodeIdentifier;
+    }
+
     TLocation Location() const noexcept override {
         return coordinates;
     }
 
-    size_t AttributeCount() const noexcept override {
-        return metadata.size();
+    std::size_t AttributeCount() const noexcept override {
+        return attrMap.size();
     }
 
-    std::string GetAttributeKey(size_t pos) const override {
-        if(pos >= metadata.size()) return "";
-        auto it = metadata.begin();
-        std::advance(it, pos);  // different iteration method
-        return it->first;
+    std::string GetAttributeKey(std::size_t pos) const noexcept override {
+        if (pos < attrMap.size()) {
+            auto it = attrMap.begin();
+            std::advance(it, pos);
+            return it->first;
+        }
+        return "";
     }
 
-    bool HasAttribute(const std::string &k) const override {
-        return metadata.count(k);
+    bool HasAttribute(const std::string &key) const noexcept override {
+        return attrMap.find(key) != attrMap.end();
     }
 
-    std::string GetAttribute(const std::string &k) const override {
-        const auto found = metadata.find(k);
-        return found != metadata.end() ? found->second : "";
+    std::string GetAttribute(const std::string &key) const noexcept override {
+        auto it = attrMap.find(key);
+        if (it != attrMap.end()) {
+            return it->second;
+        }
+        return "";
     }
 };
 
-// Way implementation - same class name, different internals
+// Implementation of the way class, inheriting from CStreetMap::SWay.
 class COpenStreetMap::SImplementation::SWayImpl : public CStreetMap::SWay {
-    TWayID path_id;  // renamed
-    std::vector<TNodeID> contained_nodes;  // different name
-    std::unordered_map<std::string, std::string> way_info;  // renamed
-    
 public:
-    TWayID ID() const noexcept override { return path_id; }
-    
-    size_t NodeCount() const noexcept override {
-        return contained_nodes.size();
+    TWayID wayIdentifier;  // Unique way ID
+    std::vector<TNodeID> nodeRefs;  // List of node IDs forming the way
+    std::unordered_map<std::string, std::string> attrMap; // Attributes for the way
+
+    TWayID ID() const noexcept override {
+        return wayIdentifier;
     }
 
-    TNodeID GetNodeID(size_t pos) const override {
-        return pos < contained_nodes.size() ? contained_nodes[pos]
-               : CStreetMap::InvalidNodeID;
+    std::size_t NodeCount() const noexcept override {
+        return nodeRefs.size();
     }
 
-    size_t AttributeCount() const noexcept override {
-        return way_info.size();
+    TNodeID GetNodeID(std::size_t pos) const noexcept override {
+        if (pos < nodeRefs.size()) {
+            return nodeRefs[pos];
+        }
+        return CStreetMap::InvalidNodeID;
     }
 
-    std::string GetAttributeKey(size_t pos) const override {
-        if(pos >= way_info.size()) return "";
-        auto it = way_info.begin();
-        std::advance(it, pos);  // typo in comment: advance spelled wrong
-        return it->first;
+    std::size_t AttributeCount() const noexcept override {
+        return attrMap.size();
     }
 
-    bool HasAttribute(const std::string &k) const override {
-        return way_info.find(k) != way_info.end();
+    std::string GetAttributeKey(std::size_t pos) const noexcept override {
+        if (pos < attrMap.size()) {
+            auto it = attrMap.begin();
+            std::advance(it, pos);
+            return it->first;
+        }
+        return "";
     }
 
-    std::string GetAttribute(const std::string &k) const override {
-        const auto found = way_info.find(k);
-        return found != way_info.end() ? found->second : "";
+    bool HasAttribute(const std::string &key) const noexcept override {
+        return attrMap.find(key) != attrMap.end();
+    }
+
+    std::string GetAttribute(const std::string &key) const noexcept override {
+        auto it = attrMap.find(key);
+        if (it != attrMap.end()) {
+            return it->second;
+        }
+        return "";
     }
 };
 
+// Constructor: Reads XML entities and constructs nodes and ways.
 COpenStreetMap::COpenStreetMap(std::shared_ptr<CXMLReader> src) {
     DImplementation = std::make_unique<SImplementation>();
-    SXMLEntity elem;
-    std::shared_ptr<SImplementation::SNodeImpl> tmp_node;
-    std::shared_ptr<SImplementation::SWayImpl> tmp_way;
 
-    // process xml elements
-    while(src->ReadEntity(elem)) {
-        if(elem.DType == SXMLEntity::EType::StartElement) {
-            if(elem.DNameData == "node") {
-                tmp_node = std::make_shared<SImplementation::SNodeImpl>();
-                tmp_way.reset();
-                // handle attributes in different order
-                for(const auto &[k, v] : elem.DAttributes) {
-                    if(k == "lon") tmp_node->coordinates.second = stod(v);
-                    else if(k == "lat") tmp_node->coordinates.first = stod(v);
-                    else if(k == "id") tmp_node->uid = stoull(v);
-                    else tmp_node->metadata[k] = v;  // different storage name
+    SXMLEntity xmlEntity;
+    // Use separate pointers for current node and way.
+    std::shared_ptr<SImplementation::SNodeImpl> curNode = nullptr;
+    std::shared_ptr<SImplementation::SWayImpl> curWay = nullptr;
+
+    while (src->ReadEntity(xmlEntity)) {
+        if (xmlEntity.DType == SXMLEntity::EType::StartElement) {
+            if (xmlEntity.DNameData == "node") {
+                curNode = std::make_shared<SImplementation::SNodeImpl>();
+                curWay = nullptr;
+                for (const auto &attribute : xmlEntity.DAttributes) {
+                    const std::string &attrName = attribute.first;
+                    const std::string &attrValue = attribute.second;
+                    if (attrName == "id") {
+                        curNode->nodeIdentifier = std::stoull(attrValue);
+                    } else if (attrName == "lat") {
+                        curNode->coordinates.first = std::stod(attrValue);
+                    } else if (attrName == "lon") {
+                        curNode->coordinates.second = std::stod(attrValue);
+                    } else {
+                        curNode->attrMap[attrName] = attrValue;
+                    }
                 }
-            }
-            else if(elem.DNameData == "way") {
-                tmp_way = std::make_shared<SImplementation::SWayImpl>();
-                tmp_node.reset();
-                for(const auto &[k, v] : elem.DAttributes) {
-                    if(k == "id") tmp_way->path_id = stoull(v);
-                    else tmp_way->way_info[k] = v;  // different name
+            } else if (xmlEntity.DNameData == "way") {
+                curWay = std::make_shared<SImplementation::SWayImpl>();
+                curNode = nullptr;
+                for (const auto &attribute : xmlEntity.DAttributes) {
+                    if (attribute.first == "id") {
+                        curWay->wayIdentifier = std::stoull(attribute.second);
+                    } else {
+                        curWay->attrMap[attribute.first] = attribute.second;
+                    }
                 }
-            }
-            else if(elem.DNameData == "nd" && tmp_way) {
-                for(const auto &[k, v] : elem.DAttributes) {
-                    if(k == "ref") tmp_way->contained_nodes.push_back(stoull(v));
+            } else if (xmlEntity.DNameData == "nd" && curWay) {
+                for (const auto &attribute : xmlEntity.DAttributes) {
+                    if (attribute.first == "ref") {
+                        curWay->nodeRefs.push_back(std::stoull(attribute.second));
+                    }
                 }
-            }
-            else if(elem.DNameData == "tag") {
+            } else if (xmlEntity.DNameData == "tag") {
                 std::string key, value;
-                for(const auto &[k, v] : elem.DAttributes) {
-                    if(k == "v") value = v;
-                    else if(k == "k") key = v;  // reversed order
+                for (const auto &attribute : xmlEntity.DAttributes) {
+                    if (attribute.first == "k") {
+                        key = attribute.second;
+                    } else if (attribute.first == "v") {
+                        value = attribute.second;
+                    }
                 }
-                if(!key.empty()) {
-                    if(tmp_node) tmp_node->metadata[key] = value;
-                    else if(tmp_way) tmp_way->way_info[key] = value;
+                if (!key.empty()) {
+                    if (curNode) {
+                        curNode->attrMap[key] = value;
+                    } else if (curWay) {
+                        curWay->attrMap[key] = value;
+                    }
                 }
             }
-        }
-        else if(elem.DType == SXMLEntity::EType::EndElement) {
-            if(elem.DNameData == "node" && tmp_node) {
-                DImplementation->node_storage.push_back(tmp_node);
-                tmp_node.reset();
-            }
-            else if(elem.DNameData == "way" && tmp_way) {
-                DImplementation->path_storage.push_back(tmp_way);
-                tmp_way.reset();
+        } else if (xmlEntity.DType == SXMLEntity::EType::EndElement) {
+            if (xmlEntity.DNameData == "node" && curNode) {
+                DImplementation->nodesCollection.push_back(curNode);
+                curNode = nullptr;
+            } else if (xmlEntity.DNameData == "way" && curWay) {
+                DImplementation->waysCollection.push_back(curWay);
+                curWay = nullptr;
             }
         }
     }
 }
 
-// remaining interface methods
-size_t COpenStreetMap::NodeCount() const noexcept {
-    return DImplementation->node_storage.size();
+COpenStreetMap::~COpenStreetMap() = default;
+
+std::size_t COpenStreetMap::NodeCount() const noexcept {
+    return DImplementation->nodesCollection.size();
 }
 
-size_t COpenStreetMap::WayCount() const noexcept {
-    return DImplementation->path_storage.size();
+std::size_t COpenStreetMap::WayCount() const noexcept {
+    return DImplementation->waysCollection.size();
 }
 
-std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByIndex(size_t idx) const noexcept {
-    return idx < DImplementation->node_storage.size() ? DImplementation->node_storage[idx] : nullptr;
+std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByIndex(std::size_t idx) const noexcept {
+    if (idx < DImplementation->nodesCollection.size())
+        return DImplementation->nodesCollection[idx];
+    return nullptr;
 }
 
+std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByID(TNodeID id) const noexcept {
+    for (const auto &node : DImplementation->nodesCollection) {
+        if (node->ID() == id)
+            return node;
+    }
+    return nullptr;
+}
+
+std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByIndex(std::size_t idx) const noexcept {
+    if (idx < DImplementation->waysCollection.size())
+        return DImplementation->waysCollection[idx];
+    return nullptr;
+}
+
+std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByID(TWayID id) const noexcept {
+    for (const auto &way : DImplementation->waysCollection) {
+        if (way->ID() == id)
+            return way;
+    }
+    return nullptr;
+}
