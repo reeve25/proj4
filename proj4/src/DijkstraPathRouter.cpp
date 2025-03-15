@@ -235,9 +235,13 @@ double CDijkstraPathRouter::FindShortestPath(TVertexID src, TVertexID dest, std:
             path.clear();
             return NoPathExists;
         }
+        path.insert(path.begin(), i); // Prepend i to the path
+    }
+    path.insert(path.begin(), src); // Prepend the source
+        /*
         path.push_back(i);
     }
     path.push_back(src);
-    std::reverse(path.begin(), path.end());
+    std::reverse(path.begin(), path.end());*/
     return dist[dest];
 }
