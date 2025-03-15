@@ -126,12 +126,14 @@ std::shared_ptr<CBusSystem::SRoute> CBusSystemIndexer::SImplementation::SortedRo
 }
 
 std::shared_ptr<CBusSystem::SStop> CBusSystemIndexer::SImplementation::StopByNodeID(TNodeID nodeId) const {
+    std::shared_ptr<CBusSystem::SStop> output = nullptr;
     for (std::size_t i = 0; i < busSystemPtr->StopCount(); ++i) {
         auto stop = busSystemPtr->StopByIndex(i);
-        if (stop && stop->NodeID() == nodeId)
-            return stop;
+        if (stop && stop->NodeID() == nodeId) {
+            output = stop;
+        }
     }
-    return nullptr;
+    return output;
 }
 
 bool CBusSystemIndexer::SImplementation::RoutesByNodeIDs(TNodeID src, TNodeID dest,
