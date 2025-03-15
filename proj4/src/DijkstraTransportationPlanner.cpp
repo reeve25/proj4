@@ -297,10 +297,10 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
         if (!prevNode || !currNode)
             continue;
         
-        double segDistance = SGeographicUtils::HaversineDistanceInMiles(prevNode->Location(), currNode->Location());
-        double walkDuration = segDistance / DImplementation->configPtr->WalkSpeed();
-        double bikeDuration = segDistance / DImplementation->configPtr->BikeSpeed();
-        double busDuration = std::numeric_limits<double>::max();
+        float segDistance = SGeographicUtils::HaversineDistanceInMiles(prevNode->Location(), currNode->Location());
+        float walkDuration = segDistance / DImplementation->configPtr->WalkSpeed();
+        float bikeDuration = segDistance / DImplementation->configPtr->BikeSpeed();
+        float busDuration = std::numeric_limits<float>::max();
         std::string busOption = DImplementation->FindBusRouteBetweenNodes(nodeSequence[i-1], nodeSequence[i]);
         if (!busOption.empty()) {
             busDuration = segDistance / DImplementation->configPtr->DefaultSpeedLimit() +
