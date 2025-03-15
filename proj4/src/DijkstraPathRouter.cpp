@@ -48,7 +48,7 @@ struct CDijkstraPathRouter::SImplementation {
 
     SImplementation() {}
 
-    std::size_t VertexCount() const {
+    /*std::size_t VertexCount() const {
         return vertices.size();
     }
 
@@ -82,7 +82,7 @@ struct CDijkstraPathRouter::SImplementation {
     }
 
     bool Precompute(std::chrono::steady_clock::time_point deadline) {
-        // Placeholder for potential future precomputation.
+        // Placeholder
         return true;
     }
 
@@ -141,7 +141,7 @@ struct CDijkstraPathRouter::SImplementation {
         route.push_back(source);
         std::reverse(route.begin(), route.end());
         return dist[target];
-    }
+    }*/
 };
 
 CDijkstraPathRouter::CDijkstraPathRouter() {
@@ -151,25 +151,92 @@ CDijkstraPathRouter::CDijkstraPathRouter() {
 CDijkstraPathRouter::~CDijkstraPathRouter() {}
 
 std::size_t CDijkstraPathRouter::VertexCount() const noexcept {
-    return DImplementation->VertexCount();
+    return DImplementation->vertices.size();
 }
 
 CPathRouter::TVertexID CDijkstraPathRouter::AddVertex(std::any tag) noexcept {
-    return DImplementation->AddVertex(tag);
+    auto tempVertex = std::make_shared<SImplementation::VertexData>();
+    tempVertex->id = DImplementation->vertexCounter;
+    tempVertex->tag = tag;
+    DImplementation->vertices.push_back(tempVertex);
+    return DImplementation->vertexCounter++;
 }
 
 std::any CDijkstraPathRouter::GetVertexTag(TVertexID id) const noexcept {
-    return DImplementation->GetVertexTag(id);
+    return DImplementation->vertices.at(id)->fetchTag();
 }
 
 bool CDijkstraPathRouter::AddEdge(TVertexID src, TVertexID dest, double weight, bool bidir) noexcept {
-    return DImplementation->AddEdge(src, dest, weight, bidir);
+    if (weight <= 0) 
+        return false;
+
+    auto sourceVertex = DImplementation->vertices.at(src);
+    sourceVertex->weights[dest] = weight;
+    sourceVertex->neighbors.push_back(dest);
+
+    if(bidir) {
+        auto destVertex = DImplementation->vertices.at(dest);
+        destVertex->weights[src] = weight;
+        destVertex->neighbors.push_back(src);
+    }
+    return true;
 }
 
 bool CDijkstraPathRouter::Precompute(std::chrono::steady_clock::time_point deadline) noexcept {
-    return DImplementation->Precompute(deadline);
+    // Placeholder
+    return true;
 }
 
 double CDijkstraPathRouter::FindShortestPath(TVertexID src, TVertexID dest, std::vector<TVertexID> &path) noexcept {
-    return DImplementation->FindShortestPath(src, dest, path);
+    path.clear();
+
+    if (src >= DImplementation->vertices.size() || dest >= DImplementation->vertices.size()) {
+        return NoPathExists;
+    }
+
+    using Pair = std::pair<double, TVertexID>;
+    std::priority_queue<Pair, std::vector<Pair>, std::greater<Pair>> queue;
+
+    std::vector<double> dist(DImplementation->vertices.size(), INF);
+    std::vector<TVertexID> prev(DImplementation->vertices.size(), std::numeric_limits<TVertexID>::max());
+
+    dist[src] = 0.0;
+    queue.push({0.0, src});
+
+    while (!queue.empty()) {
+        auto [d, current] = queue.top();
+        queue.pop();
+
+        if (d > dist[current])
+            continue;
+        
+        if (current == dest)
+            break;
+
+        const auto neighborsList = DImplementation->vertices[current]->getNeighbors();
+        for (const auto &nbr : neighborsList) {
+            double alt = dist[current] + DImplementation->vertices[current]->getWeight(nbr);
+            if (alt < dist[nbr]) {
+                dist[nbr] = alt;
+                prev[nbr] = current;
+                queue.push({alt, nbr});
+            }
+        }
+    }
+
+    if (dist[dest] == INF) {
+        path.clear();
+        return NoPathExists;
+    }
+
+    for (TVertexID v = dest; v != src; v = prev[v]) {
+        if (prev[v] == std::numeric_limits<TVertexID>::max()) {
+            path.clear();
+            return NoPathExists;
+        }
+        path.push_back(v);
+    }
+    path.push_back(src);
+    std::reverse(path.begin(), path.end());
+    return dist[dest];
 }
