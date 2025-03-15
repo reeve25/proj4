@@ -149,7 +149,7 @@ bool CBusSystemIndexer::SImplementation::RoutesByNodeIDs(TNodeID src, TNodeID de
 
     for (std::size_t i = 0; i < busSystemPtr->RouteCount(); ++i) {
         auto route = busSystemPtr->RouteByIndex(i);
-        if (route == nullptr) {
+        if (route) {
             int hasSrc = 0, hasDest = 0;
             for (std::size_t j = 0; j < route->StopCount(); ++j) {
                 if (route->GetStopID(j) == srcID) {
