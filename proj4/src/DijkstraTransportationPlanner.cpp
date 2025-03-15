@@ -281,7 +281,8 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
     for (const auto &vertex : routerPath)
         nodeSequence.push_back(DImplementation->timeVertexToNode[vertex]);
     
-    // Dynamically process the computed path.
+    // Dynamically build the trip path.
+    // For this version, if a bus route exists between two nodes, we force Bus mode.
     ETransportationMode lastMode = ETransportationMode::Walk;
     std::string currentBusRoute = "";
     path.push_back({lastMode, nodeSequence[0]});
@@ -297,14 +298,9 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
         double bikeDuration = segDistance / DImplementation->configPtr->BikeSpeed();
         
         std::string busOption = DImplementation->FindBusRouteBetweenNodes(nodeSequence[i-1], nodeSequence[i]);
-        double busDuration = std::numeric_limits<double>::max();
-        if (!busOption.empty()) {
-            busDuration = segDistance / DImplementation->configPtr->DefaultSpeedLimit() +
-                          (DImplementation->configPtr->BusStopTime() / 3600.0);
-        }
-        
+        // Force Bus mode if a bus option exists.
         ETransportationMode chosenMode;
-        if (!busOption.empty() && (busDuration < walkDuration && busDuration < bikeDuration)) {
+        if (!busOption.empty()) {
             chosenMode = ETransportationMode::Bus;
             currentBusRoute = busOption;
         } else if (bikeDuration < walkDuration) {
@@ -315,7 +311,7 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
             currentBusRoute = "";
         }
         
-        if (chosenMode == lastMode && (chosenMode != ETransportationMode::Bus || !currentBusRoute.empty()))
+        if (chosenMode == lastMode)
             path.back().second = nodeSequence[i];
         else
             path.push_back({chosenMode, nodeSequence[i]});
