@@ -43,8 +43,8 @@ struct CDijkstraTransportationPlanner::SImplementation {
             [](const auto &a, const auto &b) {
                 return a->ID() < b->ID();
             });
-        for (size_t i = 0; i < orderedNodes.size(); ++i) {
-            nodeIndexMap[orderedNodes[i]->ID()] = i;
+        for (const auto& node : orderedNodes) {
+            nodeIndexMap[node->ID()] = nodeIndexMap.size();
         }
         
         // Build vertex mappings and add vertices to both routers.
