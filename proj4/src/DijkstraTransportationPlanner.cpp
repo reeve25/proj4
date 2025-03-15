@@ -1,4 +1,4 @@
-#include "DijkstraTransportationPlanner.h"
+/*#include "DijkstraTransportationPlanner.h"
 #include "DijkstraPathRouter.h"
 #include "GeographicUtils.h"
 #include <queue>
@@ -335,4 +335,4 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
 
 bool CDijkstraTransportationPlanner::GetPathDescription(const std::vector<TTripStep> &path, std::vector<std::string> &desc) const {
     return true;
-}
+}*/
