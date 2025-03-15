@@ -198,7 +198,7 @@ struct CDijkstraTransportationPlanner::SImplementation {
         for (const auto &entry : busRoutes) {
             CStreetMap::TNodeID nodeID = entry.first;
             for (const auto &routePair : entry.second) {
-                const std::string &routeName = routePair.first;
+                // The route name (routePair.first) is not used here.
                 CStreetMap::TNodeID nextNodeID = routePair.second;
                 auto srcNode = streetMap->NodeByID(nodeID);
                 auto destNode = streetMap->NodeByID(nextNodeID);
