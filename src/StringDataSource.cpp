@@ -1,4 +1,4 @@
-#include "StringDataSource.h"
+#include "../include/StringDataSource.h"
 
 CStringDataSource::CStringDataSource(const std::string &str) : DString(str), DIndex(0){
 

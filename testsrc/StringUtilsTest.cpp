@@ -1,126 +1,148 @@
 #include <gtest/gtest.h>
-#include "StringUtils.h"
+#include "../include/StringUtils.h"
+#include <string>
 
 TEST(StringUtilsTest, SliceTest){
-    EXPECT_EQ(StringUtils::Slice("Hello World!",1), "ello World!");
-    EXPECT_EQ(StringUtils::Slice("Hello World!",0,5), "Hello");
-    EXPECT_EQ(StringUtils::Slice("Hello World!",0,-1), "Hello World");
-    EXPECT_EQ(StringUtils::Slice("Hello World!",3,-2), "lo Worl");
-    EXPECT_EQ(StringUtils::Slice("Hello World!",-5,-2), "orl");
-    EXPECT_EQ(StringUtils::Slice("Hello World!",14), "");
+    std::string str = "My name is Logan";
+    std::string out1 = StringUtils::Slice(str, 0, 2);
+    EXPECT_EQ(out1, "My");
+    std::string out2 = StringUtils::Slice(str, 0, str.length());
+    EXPECT_EQ(out2, str);
+    std::string out3 = StringUtils::Slice(str, 3, 7);
+    EXPECT_EQ(out3, "name");
+    std::string out4 = StringUtils::Slice(str, 11, str.length());
+    EXPECT_EQ(out4, "Logan");
 }
 
 TEST(StringUtilsTest, Capitalize){
-    EXPECT_EQ(StringUtils::Capitalize("hello world!"), "Hello world!");
-    EXPECT_EQ(StringUtils::Capitalize("HELLO WORLD!"), "Hello world!");
-    EXPECT_EQ(StringUtils::Capitalize(" HELLO WORLD!"), " hello world!");
+    std::string str1 = "  hello";
+    std::string str2 = "How are23";
+    std::string str3 = "yOU DOING";
+    EXPECT_EQ(StringUtils::Capitalize(str1), "  Hello");
+    EXPECT_EQ(StringUtils::Capitalize(str2), str2);
+    EXPECT_EQ(StringUtils::Capitalize(str3), "YOU DOING");
 }
 
 TEST(StringUtilsTest, Upper){
-    EXPECT_EQ(StringUtils::Upper("hello world!"), "HELLO WORLD!");
-    EXPECT_EQ(StringUtils::Upper("Hello World!"), "HELLO WORLD!");
-    EXPECT_EQ(StringUtils::Upper("HELLO WORLD!"), "HELLO WORLD!");
-    EXPECT_EQ(StringUtils::Upper(" HELLO WORLD!"), " HELLO WORLD!");
+    std::string str1 = "hElLo";
+    std::string str2 = "how are23";
+    std::string str3 = "YOU DOING";
+    EXPECT_EQ(StringUtils::Upper(str1), "HELLO");
+    EXPECT_EQ(StringUtils::Upper(str2), "HOW ARE23");
+    EXPECT_EQ(StringUtils::Upper(str3), str3);
 }
 
 TEST(StringUtilsTest, Lower){
-    EXPECT_EQ(StringUtils::Lower("hello world!"), "hello world!");
-    EXPECT_EQ(StringUtils::Lower("Hello World!"), "hello world!");
-    EXPECT_EQ(StringUtils::Lower("HELLO WORLD!"), "hello world!");
-    EXPECT_EQ(StringUtils::Lower(" HELLO WORLD!"), " hello world!");
+    std::string str1 = "hElLO";
+    std::string str2 = "How 64 are";
+    std::string str3 = "YOU DOING";
+    std::string str4 = "today 343djfdkjfkdsjf43768374";
+    EXPECT_EQ(StringUtils::Lower(str1), "hello");
+    EXPECT_EQ(StringUtils::Lower(str2), "how 64 are");
+    EXPECT_EQ(StringUtils::Lower(str3), "you doing");
+    EXPECT_EQ(StringUtils::Lower(str4), str4);
 }
 
 TEST(StringUtilsTest, LStrip){
-    std::string Str1 = "    Test String    ";
-    std::string Str2 = " \t \r\n Test String";
-    std::string Str3 = "Test String \t \r\n ";
-    EXPECT_EQ(StringUtils::LStrip(Str1), "Test String    ");
-    EXPECT_EQ(StringUtils::LStrip(Str2), "Test String");
-    EXPECT_EQ(StringUtils::LStrip(Str3), Str3);
+    std::string str1 = "      Hello";
+    std::string str2 = "    5how are 23   ";
+    std::string str3 = "YOU DOING    ";
+    std::string str4 = "";
+    EXPECT_EQ(StringUtils::LStrip(str1), "Hello");
+    EXPECT_EQ(StringUtils::LStrip(str2), "5how are 23   ");
+    EXPECT_EQ(StringUtils::LStrip(str3), str3);
+    EXPECT_EQ(StringUtils::LStrip(str4), str4);
 }
 
 TEST(StringUtilsTest, RStrip){
-    std::string Str1 = "    Test String    ";
-    std::string Str2 = " \t \r\n Test String";
-    std::string Str3 = "Test String \t \r\n ";
-    EXPECT_EQ(StringUtils::RStrip(Str1), "    Test String");
-    EXPECT_EQ(StringUtils::RStrip(Str2),Str2);
-    EXPECT_EQ(StringUtils::RStrip(Str3), "Test String");
+    std::string str1 = "      Hello";
+    std::string str2 = "    5how are 23   ";
+    std::string str3 = "YOU DOING    ";
+    std::string str4 = "";
+    EXPECT_EQ(StringUtils::RStrip(str1), str1);
+    EXPECT_EQ(StringUtils::RStrip(str2), "    5how are 23");
+    EXPECT_EQ(StringUtils::RStrip(str3), "YOU DOING");
+    EXPECT_EQ(StringUtils::RStrip(str4), str4);
 }
 
 TEST(StringUtilsTest, Strip){
-    std::string Str1 = "    Test String    ";
-    std::string Str2 = " \t \r\n Test String";
-    std::string Str3 = "Test String \t \r\n ";
-    EXPECT_EQ(StringUtils::Strip(Str1), "Test String");
-    EXPECT_EQ(StringUtils::Strip(Str2), "Test String");
-    EXPECT_EQ(StringUtils::Strip(Str3), "Test String");
-    EXPECT_EQ(StringUtils::Strip(Str1),StringUtils::RStrip(StringUtils::LStrip(Str1)));
-    EXPECT_EQ(StringUtils::Strip(Str2),StringUtils::RStrip(StringUtils::LStrip(Str2)));
-    EXPECT_EQ(StringUtils::Strip(Str3),StringUtils::RStrip(StringUtils::LStrip(Str3)));
+    std::string str1 = "      Hello";
+    std::string str2 = "    5how are 23   ";
+    std::string str3 = "YOU DOING    ";
+    std::string str4 = "";
+    EXPECT_EQ(StringUtils::Strip(str1), "Hello");
+    EXPECT_EQ(StringUtils::Strip(str2), "5how are 23");
+    EXPECT_EQ(StringUtils::Strip(str3), "YOU DOING");
+    EXPECT_EQ(StringUtils::Strip(str4), str4);
 }
 
 TEST(StringUtilsTest, Center){
-    EXPECT_EQ(StringUtils::Center("Test String",19), "    Test String    ");
-    EXPECT_EQ(StringUtils::Center("Test String",16,'-'), "--Test String---");
-    EXPECT_EQ(StringUtils::Center("Test String",5,'-'), "Test String");
-}
-
-TEST(StringUtilsTest, LJust){
-    EXPECT_EQ(StringUtils::LJust("Test String",19), "Test String        ");
-    EXPECT_EQ(StringUtils::LJust("Test String",5), "Test String");
+    EXPECT_EQ(StringUtils::Center("hello", 10), "  hello   ");
+    EXPECT_EQ(StringUtils::Center("there", 9), "  there  ");
+    EXPECT_EQ(StringUtils::Center("test", 8, '-'), "--test--");
+    EXPECT_EQ(StringUtils::Center("test", 9, '-'), "--test---");
+    EXPECT_EQ(StringUtils::Center("  ", 5, ' '), "     ");
 }
 
 TEST(StringUtilsTest, RJust){
-    EXPECT_EQ(StringUtils::RJust("Test String",19), "        Test String");
-    EXPECT_EQ(StringUtils::RJust("Test String",5), "Test String");
+    EXPECT_EQ(StringUtils::RJust("hello", 8), "   hello");
+    EXPECT_EQ(StringUtils::RJust("there", 9), "    there");
+    EXPECT_EQ(StringUtils::RJust("test", 6, '-'), "--test");
+    EXPECT_EQ(StringUtils::RJust("test", 9, 't'), "ttttttest");
+    EXPECT_EQ(StringUtils::RJust("  ", 5, ' '), "     ");
+}
+
+TEST(StringUtilsTest, LJust){
+    EXPECT_EQ(StringUtils::LJust("hello", 8), "hello   ");
+    EXPECT_EQ(StringUtils::LJust("there", 9), "there    ");
+    EXPECT_EQ(StringUtils::LJust("test", 6, '-'), "test--");
+    EXPECT_EQ(StringUtils::LJust("test", 9, 't'), "testttttt");
+    EXPECT_EQ(StringUtils::LJust("  ", 5, ' '), "     ");
 }
 
 TEST(StringUtilsTest, Replace){
-    EXPECT_EQ(StringUtils::Replace("\\Path\\To\\A\\Directory","\\","/"), "/Path/To/A/Directory");
-    EXPECT_EQ(StringUtils::Replace("a = b + c * b + d","b","e"), "a = e + c * e + d");
-    EXPECT_EQ(StringUtils::Replace("aabbccaaabbbcccaaaa","aa","ee"), "eebbcceeabbbccceeee");
+    EXPECT_EQ(StringUtils::Replace("hello world", "world", "friend"), "hello friend");
+    EXPECT_EQ(StringUtils::Replace("aaaa", "aa", "aaa"), "aaaaaa");
+    EXPECT_EQ(StringUtils::Replace("test", "", "x"), "test");
+    EXPECT_EQ(StringUtils::Replace("test", "t", ""), "es");
 }
 
 TEST(StringUtilsTest, Split){
-    auto PathComponents = StringUtils::Split("/Path/To/A/Directory","/");
-    ASSERT_EQ(PathComponents.size(), 5);
-    EXPECT_EQ(PathComponents[0], "");
-    EXPECT_EQ(PathComponents[1], "Path");
-    EXPECT_EQ(PathComponents[2], "To");
-    EXPECT_EQ(PathComponents[3], "A");
-    EXPECT_EQ(PathComponents[4], "Directory");
-    
-    auto SentenceComponents = StringUtils::Split("A  tougher\ttest\nto   pass!");
-    ASSERT_EQ(SentenceComponents.size(), 5);
-    EXPECT_EQ(SentenceComponents[0], "A");
-    EXPECT_EQ(SentenceComponents[1], "tougher");
-    EXPECT_EQ(SentenceComponents[2], "test");
-    EXPECT_EQ(SentenceComponents[3], "to");
-    EXPECT_EQ(SentenceComponents[4], "pass!");
+    std::string str1 = "hello world how ";
+    std::vector<std::string> compVect = {"hello", "world", "how", ""};
+    EXPECT_EQ(StringUtils::Split(str1, " "), compVect);
+    std::string str2 = "hello";
+    compVect = {"h", "e", "l", "l", "o"};
+    EXPECT_EQ(StringUtils::Split(str2), compVect);
+    std::string str3 = "";
+    compVect = {""};
+    EXPECT_EQ(StringUtils::Split(str3), compVect);
+    std::string str = "A  test";  // two spaces between A and test
+    std::vector<std::string> expected = {"A", " ", "t", "e", "s", "t"};
+    EXPECT_EQ(StringUtils::Split(str, "\n"), expected);
 }
 
 TEST(StringUtilsTest, Join){
-    std::vector<std::string> PathComponents = {"", "Path", "To", "A", "Directory"};
-    EXPECT_EQ(StringUtils::Join("/",PathComponents), "/Path/To/A/Directory");
-    
-    std::vector<std::string>  SentenceComponents = {"A","tougher","test","to","pass!"};
-    EXPECT_EQ(StringUtils::Join(" ",SentenceComponents), "A tougher test to pass!");
+    std::vector<std::string> strings = {"hello", "world", "", "how"};
+    EXPECT_EQ(StringUtils::Join(" ", strings), "hello world  how");
+    EXPECT_EQ(StringUtils::Join(",", strings), "hello,world,,how");
+    EXPECT_EQ(StringUtils::Join("", strings), "helloworldhow");
+
 }
 
 TEST(StringUtilsTest, ExpandTabs){
-    EXPECT_EQ(StringUtils::ExpandTabs("1\t2\t3\t4"), "1   2   3   4");
-    EXPECT_EQ(StringUtils::ExpandTabs("1\t12\t123\t1234"), "1   12  123 1234");
-    EXPECT_EQ(StringUtils::ExpandTabs("1234\t123\t12\t1"), "1234    123 12  1");
-    EXPECT_EQ(StringUtils::ExpandTabs("1234\t123\t12\t1",3), "1234  123   12 1");
-    EXPECT_EQ(StringUtils::ExpandTabs("1234\t123\t12\t1",0), "1234123121");
+    EXPECT_EQ(StringUtils::ExpandTabs("hello\tworld", 4), "hello    world");
+    EXPECT_EQ(StringUtils::ExpandTabs("\thello\tworld\t", 2), "  hello  world  ");
+    EXPECT_EQ(StringUtils::ExpandTabs("a\t\tb", 2), "a    b");
+    EXPECT_EQ(StringUtils::ExpandTabs("", 4), "");
+    EXPECT_EQ(StringUtils::ExpandTabs("no tabs", 4), "no tabs");
 }
 
 TEST(StringUtilsTest, EditDistance){
-    EXPECT_EQ(StringUtils::EditDistance("1234","1234"), 0);
-    EXPECT_EQ(StringUtils::EditDistance("Test","test"), 1);
-    EXPECT_EQ(StringUtils::EditDistance("Test","test",true), 0);
-    EXPECT_EQ(StringUtils::EditDistance("12345","52341"), 2);
-    EXPECT_EQ(StringUtils::EditDistance("This is an example","This is a sample"), 3);
-    EXPECT_EQ(StringUtils::EditDistance("int Var = Other + 3.4;","int x = y + 3.4;"), 8);
+    EXPECT_EQ(StringUtils::EditDistance("kitten", "sitting"), 3);
+    EXPECT_EQ(StringUtils::EditDistance("kitten", "kitten"), 0);
+    EXPECT_EQ(StringUtils::EditDistance("", "test"), 4);
+    EXPECT_EQ(StringUtils::EditDistance("test", ""), 4);
+    EXPECT_EQ(StringUtils::EditDistance("HeLLo", "hello", false), 3);
+    EXPECT_EQ(StringUtils::EditDistance("Hello", "hello", true), 0);
 }

@@ -1,4 +1,4 @@
-#include "StringDataSink.h"
+#include "../include/StringDataSink.h"
 
 const std::string &CStringDataSink::String() const{
     return DString;
