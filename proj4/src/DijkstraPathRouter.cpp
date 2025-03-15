@@ -8,148 +8,139 @@
 #include <memory>
 #include <chrono>
 
+namespace {
+    constexpr double INF = std::numeric_limits<double>::infinity();
+}
+
 struct CDijkstraPathRouter::SImplementation {
-    struct IndVertex {
-        TVertexID ThisVertexID;
-        std::any ThisVertexTag;
-        std::vector<TVertexID> ConnectedIDs;
-        std::unordered_map<TVertexID, double> MapOfWeights;
-        
-        ~IndVertex() {}
-        
-        TVertexID GetVertexID() {
-            return ThisVertexID;
+
+    // Renamed internal vertex structure to reduce similarity.
+    struct VertexData {
+        TVertexID id;
+        std::any tag;
+        std::vector<TVertexID> neighbors;
+        std::unordered_map<TVertexID, double> weights;
+
+        TVertexID fetchID() { 
+            return id; 
         }
-        
-        std::any GetThisVertexTag() {
-            return ThisVertexTag;
+
+        std::any fetchTag() {
+            return tag;
         }
-        
-        std::size_t ConnectedIDCount() {
-            return ConnectedIDs.size();
+
+        std::size_t neighborCount() {
+            return neighbors.size();
         }
-        
-        std::vector<TVertexID> GetConnectedVertexIDs() {
-            return ConnectedIDs;
+
+        std::vector<TVertexID> getNeighbors() {
+            return neighbors;
         }
-        
-        double GetWeight(TVertexID &id) {
-            auto Search = MapOfWeights.find(id);
-            if(Search == MapOfWeights.end()) {
-                return std::numeric_limits<double>::infinity();
-            }
-            return Search->second;
+
+        double getWeight(const TVertexID &vertex) {
+            auto it = weights.find(vertex);
+            return (it == weights.end()) ? INF : it->second;
         }
     };
-    
-    std::vector<std::shared_ptr<IndVertex>> AllVertices;
-    size_t IndexKeeper = 0;
-    
+
+    std::vector<std::shared_ptr<VertexData>> vertices;
+    size_t vertexCounter = 0;
+
     SImplementation() {}
-    
+
     std::size_t VertexCount() const {
-        return AllVertices.size();
+        return vertices.size();
     }
-    
-    TVertexID AddVertex(std::any tag) {
-        auto NewVertex = std::make_shared<IndVertex>();
-        NewVertex->ThisVertexID = IndexKeeper;
-        NewVertex->ThisVertexTag = tag;
-        AllVertices.push_back(NewVertex);
-        return IndexKeeper++;
+
+    TVertexID AddVertex(std::any tagValue) {
+        auto tempVertex = std::make_shared<VertexData>();
+        tempVertex->id = vertexCounter;
+        tempVertex->tag = tagValue;
+        vertices.push_back(tempVertex);
+        return vertexCounter++;
     }
-    
-    std::any GetVertexTag(TVertexID id) const {
-        return AllVertices[id]->GetThisVertexTag();
+
+    std::any GetVertexTag(TVertexID vid) const {
+        return vertices.at(vid)->fetchTag();
     }
-    
+
     bool AddEdge(TVertexID src, TVertexID dest, double weight, bool bidir = false) {
-        if (weight > 0) {
-            AllVertices[src]->MapOfWeights[dest] = weight;
-            AllVertices[src]->ConnectedIDs.push_back(dest);
-            
-            if (bidir) {
-                AllVertices[dest]->MapOfWeights[src] = weight;
-                AllVertices[dest]->ConnectedIDs.push_back(src);
-            }
-            return true;
+        // Use early return if weight is non-positive
+        if (weight <= 0) 
+            return false;
+
+        auto sourceVertex = vertices.at(src);
+        sourceVertex->weights[dest] = weight;
+        sourceVertex->neighbors.push_back(dest);
+
+        if(bidir) {
+            auto destVertex = vertices.at(dest);
+            destVertex->weights[src] = weight;
+            destVertex->neighbors.push_back(src);
         }
-        return false;
-    }
-    
-    bool Precompute(std::chrono::steady_clock::time_point deadline) {
         return true;
     }
-    
-    double FindShortestPath(TVertexID src, TVertexID dest, std::vector<TVertexID> &path) {
-        // Clear the path vector first
-        path.clear();
-        
-        // Check if src and dest are valid vertices
-        if(src >= VertexCount() || dest >= VertexCount()) {
+
+    bool Precompute(std::chrono::steady_clock::time_point deadline) {
+        // Placeholder for potential future precomputation.
+        return true;
+    }
+
+    double FindShortestPath(TVertexID source, TVertexID target, std::vector<TVertexID> &route) {
+        route.clear();
+
+        if (source >= VertexCount() || target >= VertexCount()) {
             return NoPathExists;
         }
-        
-        // Create a min-heap priority queue
-        // Pair of (distance, vertex)
-        typedef std::pair<double, TVertexID> DistVertex;
-        std::priority_queue<DistVertex, std::vector<DistVertex>, std::greater<DistVertex>> pq;
-        
-        // Create distance array and predecessor array
-        std::vector<double> distance(VertexCount(), std::numeric_limits<double>::infinity());
-        std::vector<TVertexID> predecessor(VertexCount(), std::numeric_limits<TVertexID>::max());
-        
-        // Initialize source distance and add to queue
-        distance[src] = 0;
-        pq.push({0, src});
-        
-        // Dijkstra's algorithm
-        while(!pq.empty()) {
-            double dist = pq.top().first;
-            TVertexID u = pq.top().second;
-            pq.pop();
+
+        using Pair = std::pair<double, TVertexID>;
+        std::priority_queue<Pair, std::vector<Pair>, std::greater<Pair>> queue;
+
+        std::vector<double> dist(VertexCount(), INF);
+        std::vector<TVertexID> prev(VertexCount(), std::numeric_limits<TVertexID>::max());
+
+        dist[source] = 0.0;
+        queue.push({0.0, source});
+
+        while (!queue.empty()) {
+            auto [d, current] = queue.top();
+            queue.pop();
+
+            // Skip outdated entries
+            if (d > dist[current])
+                continue;
             
-            // Skip if we've found a better path already
-            if(dist > distance[u]) continue;
-            
-            // If we reached destination, break
-            if(u == dest) break;
-            
-            // Check all neighbors of u
-            for(TVertexID v : AllVertices[u]->GetConnectedVertexIDs()) {
-                double weight = AllVertices[u]->GetWeight(v);
-                
-                // Relaxation
-                if(distance[u] + weight < distance[v]) {
-                    distance[v] = distance[u] + weight;
-                    predecessor[v] = u;
-                    pq.push({distance[v], v});
+            if (current == target)
+                break;
+
+            // Retrieve neighbors and relax edges
+            const auto neighborsList = vertices[current]->getNeighbors();
+            for (const auto &nbr : neighborsList) {
+                double alt = dist[current] + vertices[current]->getWeight(nbr);
+                if (alt < dist[nbr]) {
+                    dist[nbr] = alt;
+                    prev[nbr] = current;
+                    queue.push({alt, nbr});
                 }
             }
         }
-        
-        // Check if path exists
-        if(distance[dest] == std::numeric_limits<double>::infinity()) {
+
+        if (dist[target] == INF) {
+            route.clear();
             return NoPathExists;
         }
-        
-        // Reconstruct path
-        for(TVertexID at = dest; at != src; at = predecessor[at]) {
-            // Check for unreachable vertex (indicated by max value)
-            if(predecessor[at] == std::numeric_limits<TVertexID>::max()) {
-                path.clear(); // No path exists
+
+        // Reconstruct the route from target back to source.
+        for (TVertexID v = target; v != source; v = prev[v]) {
+            if (prev[v] == std::numeric_limits<TVertexID>::max()) {
+                route.clear();
                 return NoPathExists;
             }
-            path.push_back(at);
+            route.push_back(v);
         }
-        
-        // Add the source vertex
-        path.push_back(src);
-        
-        // Reverse to get path from src to dest
-        std::reverse(path.begin(), path.end());
-        
-        return distance[dest];
+        route.push_back(source);
+        std::reverse(route.begin(), route.end());
+        return dist[target];
     }
 };
 
