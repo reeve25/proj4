@@ -101,11 +101,13 @@ struct CDijkstraTransportationPlanner::SImplementation {
                     continue;
                 auto srcNode = streetMap->NodeByID(srcID);
                 auto destNode = streetMap->NodeByID(destID);
-                if (!srcNode || !destNode)
+                if (!srcNode || !destNode) {
                     continue;
+                }
                 double dist = SGeographicUtils::HaversineDistanceInMiles(srcNode->Location(), destNode->Location());
-                if (dist <= 0.0)
+                if (dist <= 0.0) {
                     continue;
+                }
                 auto srcDVert = nodeToDistVertex[srcID];
                 auto destDVert = nodeToDistVertex[destID];
                 distRouter->AddEdge(srcDVert, destDVert, dist, false);
@@ -256,7 +258,8 @@ double CDijkstraTransportationPlanner::FindShortestPath(TNodeID src, TNodeID des
         return CPathRouter::NoPathExists;
     
     for (const auto &vID : routerPath)
-        path.push_back(DImplementation->distVertexToNode[vID]);
+        path.insert(path.begin(), DImplementation->distVertexToNode[vID]);
+    std::reverse(path.begin(), path.end());
     return distance;
 }
 
