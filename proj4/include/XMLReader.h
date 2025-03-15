@@ -5,17 +5,17 @@
 #include "XMLEntity.h"
 #include "DataSource.h"
 
-class CXMLReader{
-    private:
-        struct SImplementation;
-        std::unique_ptr<SImplementation> DImplementation;
-        
-    public:
-        CXMLReader(std::shared_ptr< CDataSource > src);
-        ~CXMLReader();
-        
-        bool End() const;
-        bool ReadEntity(SXMLEntity &entity, bool skipcdata = false);
+class CXMLReader {
+private:
+    struct SImplementation;
+    std::unique_ptr<SImplementation> DImplementation;
+
+public:
+    CXMLReader(std::shared_ptr<CDataSource> src);
+    virtual ~CXMLReader();
+    
+    virtual bool End() const;
+    virtual bool ReadEntity(SXMLEntity &entity, bool skipcdata = false); // Ensure virtual
 };
 
 #endif
