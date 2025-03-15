@@ -230,12 +230,12 @@ double CDijkstraPathRouter::FindShortestPath(TVertexID src, TVertexID dest, std:
         return NoPathExists;
     }
 
-    for (TVertexID v = dest; v != src; v = prev[v]) {
-        if (prev[v] == std::numeric_limits<TVertexID>::max()) {
+    for (std::size_t i = dest; i != src; i = prev[i]) {
+        if (prev[i] == std::numeric_limits<TVertexID>::max()) {
             path.clear();
             return NoPathExists;
         }
-        path.push_back(v);
+        path.push_back(i);
     }
     path.push_back(src);
     std::reverse(path.begin(), path.end());
