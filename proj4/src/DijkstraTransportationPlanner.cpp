@@ -169,24 +169,24 @@ struct CDijkstraTransportationPlanner::SImplementation {
             
             auto srcTVert = nodeToTimeVertex[srcID];
             auto destTVert = nodeToTimeVertex[destID];
-            double walkTime = dist / configPtr->WalkSpeed();
+            float walkTime = dist / configPtr->WalkSpeed();
             timeRouter->AddEdge(srcTVert, destTVert, walkTime, false);
             timeRouter->AddEdge(destTVert, srcTVert, walkTime, false);
-            double bikeTime = dist / configPtr->BikeSpeed();
+            float bikeTime = dist / configPtr->BikeSpeed();
             timeRouter->AddEdge(srcTVert, destTVert, bikeTime, false);
             if (!isOneway)
                 timeRouter->AddEdge(destTVert, srcTVert, bikeTime, false);
-            double speedLimit = configPtr->DefaultSpeedLimit();
+            float speedLimit = configPtr->DefaultSpeedLimit();
             if (way->HasAttribute("maxspeed")) {
                 try {
                     std::string spd = way->GetAttribute("maxspeed");
                     size_t pos = spd.find(' ');
                     if (pos != std::string::npos)
                         spd = spd.substr(0, pos);
-                    speedLimit = std::stod(spd);
+                    speedLimit = std::stof(spd);
                 } catch (...) { }
             }
-            double driveTime = dist / speedLimit;
+            float driveTime = dist / speedLimit;
             timeRouter->AddEdge(srcTVert, destTVert, driveTime, false);
             if (!isOneway)
                 timeRouter->AddEdge(destTVert, srcTVert, driveTime, false);
