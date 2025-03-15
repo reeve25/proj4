@@ -149,14 +149,16 @@ bool CBusSystemIndexer::SImplementation::RoutesByNodeIDs(TNodeID src, TNodeID de
 
     for (std::size_t i = 0; i < busSystemPtr->RouteCount(); ++i) {
         auto route = busSystemPtr->RouteByIndex(i);
-        if (route) {
-            bool hasSrc = false, hasDest = false;
+        if (route == nullptr) {
+            int hasSrc = 0, hasDest = 0;
             for (std::size_t j = 0; j < route->StopCount(); ++j) {
-                if (route->GetStopID(j) == srcID)
-                    hasSrc = true;
-                if (route->GetStopID(j) == destID)
-                    hasDest = true;
-                if (hasSrc && hasDest) {
+                if (route->GetStopID(j) == srcID) {
+                    hasSrc = 1;
+                }
+                if (route->GetStopID(j) == destID) {
+                    hasDest = 1;
+                }
+                if (hasSrc + hasDest == 2) {
                     outRoutes.insert(route);
                     break;
                 }
