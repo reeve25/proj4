@@ -203,28 +203,29 @@ double CDijkstraPathRouter::FindShortestPath(TVertexID src, TVertexID dest, std:
     dist[src] = 0.0;
     queue.push({0.0, src});
 
-    while (!queue.empty()) {
+    bool found = false;
+    while (!queue.empty() && !found) {
         auto [d, current] = queue.top();
         queue.pop();
 
-        if (d > dist[current])
-            continue;
-        
-        if (current == dest)
-            break;
-
-        const auto neighborsList = DImplementation->vertices[current]->getNeighbors();
-        for (const auto &nbr : neighborsList) {
-            double alt = dist[current] + DImplementation->vertices[current]->getWeight(nbr);
-            if (alt < dist[nbr]) {
-                dist[nbr] = alt;
-                prev[nbr] = current;
-                queue.push({alt, nbr});
+        if (d <= dist[current]) {
+            if (current == dest) {
+                found = true;
+            } else {
+                const auto neighborsList = DImplementation->vertices[current]->getNeighbors();
+                for (const auto &nbr : neighborsList) {
+                    double alt = dist[current] + DImplementation->vertices[current]->getWeight(nbr);
+                    if (alt < dist[nbr]) {
+                        dist[nbr] = alt;
+                        prev[nbr] = current;
+                        queue.push({alt, nbr});
+                    }
+                }
             }
         }
     }
 
-    if (dist[dest] == INF) {
+    if (!found || dist[dest] == INF) {
         path.clear();
         return NoPathExists;
     }
