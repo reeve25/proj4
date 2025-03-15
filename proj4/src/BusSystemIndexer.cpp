@@ -140,26 +140,26 @@ bool CBusSystemIndexer::SImplementation::RoutesByNodeIDs(TNodeID src, TNodeID de
                          std::unordered_set<std::shared_ptr<CBusSystem::SRoute>> &outRoutes) const {
     auto sourceStop = StopByNodeID(src);
     auto destStop = StopByNodeID(dest);
-    if (!sourceStop || !destStop)
+    if (!sourceStop || !destStop) {
         return false;
+    }
 
     CBusSystem::TStopID srcID = sourceStop->ID();
     CBusSystem::TStopID destID = destStop->ID();
 
     for (std::size_t i = 0; i < busSystemPtr->RouteCount(); ++i) {
         auto route = busSystemPtr->RouteByIndex(i);
-        if (!route)
-            continue;
-
-        bool hasSrc = false, hasDest = false;
-        for (std::size_t j = 0; j < route->StopCount(); ++j) {
-            if (route->GetStopID(j) == srcID)
-                hasSrc = true;
-            if (route->GetStopID(j) == destID)
-                hasDest = true;
-            if (hasSrc && hasDest) {
-                outRoutes.insert(route);
-                break;
+        if (route) {
+            bool hasSrc = false, hasDest = false;
+            for (std::size_t j = 0; j < route->StopCount(); ++j) {
+                if (route->GetStopID(j) == srcID)
+                    hasSrc = true;
+                if (route->GetStopID(j) == destID)
+                    hasDest = true;
+                if (hasSrc && hasDest) {
+                    outRoutes.insert(route);
+                    break;
+                }
             }
         }
     }
