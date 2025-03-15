@@ -163,7 +163,7 @@ bool CBusSystemIndexer::SImplementation::RoutesByNodeIDs(TNodeID src, TNodeID de
             }
         }
     }
-    return !outRoutes.empty();
+    return outRoutes.size() > 0;
 }
 
 bool CBusSystemIndexer::SImplementation::RouteBetweenNodeIDs(TNodeID src, TNodeID dest) const {
