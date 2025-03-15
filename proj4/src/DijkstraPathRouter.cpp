@@ -190,7 +190,7 @@ bool CDijkstraPathRouter::Precompute(std::chrono::steady_clock::time_point deadl
 double CDijkstraPathRouter::FindShortestPath(TVertexID src, TVertexID dest, std::vector<TVertexID> &path) noexcept {
     path.clear();
 
-    if (src >= DImplementation->vertices.size() || dest >= DImplementation->vertices.size()) {
+    if (DImplementation->vertices.size() < src || DImplementation->vertices.size() < dest) {
         return NoPathExists;
     }
 
