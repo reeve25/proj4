@@ -103,14 +103,16 @@ std::shared_ptr<CBusSystem::SStop> CBusSystemIndexer::SImplementation::SortedSto
             sortedStopIDs.push_back(stop->ID());
     }
     std::sort(sortedStopIDs.begin(), sortedStopIDs.end());
-    if (idx < sortedStopIDs.size())
+    if (idx < sortedStopIDs.size()) {
         return busSystemPtr->StopByID(sortedStopIDs[idx]);
+    }
     return nullptr;
 }
 
 std::shared_ptr<CBusSystem::SRoute> CBusSystemIndexer::SImplementation::SortedRouteByIndex(std::size_t idx) const {
-    if (idx >= busSystemPtr->RouteCount())
+    if (busSystemPtr->RouteCount() < idx) {
         return nullptr;
+    }
     std::vector<std::string> routeNames;
     for (std::size_t i = 0; i < busSystemPtr->RouteCount(); ++i) {
         auto route = busSystemPtr->RouteByIndex(i);
