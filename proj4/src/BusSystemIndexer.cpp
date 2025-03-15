@@ -47,53 +47,110 @@ CBusSystemIndexer::~CBusSystemIndexer() {}
 
 // Return the total number of stops.
 std::size_t CBusSystemIndexer::StopCount() const noexcept {
-    return DImplementation->StopCount();
+    return DImplementation->busSystemPtr->StopCount();
 }
 
 // Return the total number of routes.
 std::size_t CBusSystemIndexer::RouteCount() const noexcept {
-    return DImplementation->RouteCount();
+    return DImplementation->busSystemPtr->RouteCount();
 }
 
 // Return a stop by sorted index.
 std::shared_ptr<CBusSystem::SStop> CBusSystemIndexer::SortedStopByIndex(std::size_t index) const noexcept {
-    return DImplementation->SortedStopByIndex(index);
+    if (index >= DImplementation->busSystemPtr->StopCount())
+        return nullptr;
+    std::vector<CBusSystem::TStopID> sortedStopIDs;
+    for (std::size_t i = 0; i < DImplementation->busSystemPtr->StopCount(); ++i) {
+        auto stop = DImplementation->busSystemPtr->StopByIndex(i);
+        if (stop)
+            sortedStopIDs.push_back(stop->ID());
+    }
+    std::sort(sortedStopIDs.begin(), sortedStopIDs.end());
+    if (index < sortedStopIDs.size()) {
+        return DImplementation->busSystemPtr->StopByID(sortedStopIDs[index]);
+    }
+    return nullptr;
 }
 
 // Return a route by sorted index.
 std::shared_ptr<CBusSystem::SRoute> CBusSystemIndexer::SortedRouteByIndex(std::size_t index) const noexcept {
-    return DImplementation->SortedRouteByIndex(index);
+    if (DImplementation->busSystemPtr->RouteCount() < index) {
+        return nullptr;
+    }
+    std::vector<std::string> routeNames;
+    for (std::size_t i = 0; i < DImplementation->busSystemPtr->RouteCount(); ++i) {
+        auto route = DImplementation->busSystemPtr->RouteByIndex(i);
+        if (route)
+            routeNames.push_back(route->Name());
+    }
+    std::sort(routeNames.begin(), routeNames.end());
+    if (index < routeNames.size())
+        return DImplementation->busSystemPtr->RouteByName(routeNames[index]);
+    return nullptr;
 }
 
 // Return a stop by its node ID.
 std::shared_ptr<CBusSystem::SStop> CBusSystemIndexer::StopByNodeID(TNodeID id) const noexcept {
-    return DImplementation->StopByNodeID(id);
+    std::shared_ptr<CBusSystem::SStop> output = nullptr;
+    for (std::size_t i = 0; i < DImplementation->busSystemPtr->StopCount(); ++i) {
+        auto stop = DImplementation->busSystemPtr->StopByIndex(i);
+        if (stop && stop->NodeID() == id) {
+            output = stop;
+        }
+    }
+    return output;
 }
 
 // Return the routes between two node IDs.
 bool CBusSystemIndexer::RoutesByNodeIDs(TNodeID src, TNodeID dest,
-                                          std::unordered_set<std::shared_ptr<CBusSystem::SRoute>> &routes) const noexcept {
-    return DImplementation->RoutesByNodeIDs(src, dest, routes);
+    std::unordered_set<std::shared_ptr<CBusSystem::SRoute>> &routes) const noexcept {
+    auto sourceStop = StopByNodeID(src);
+    auto destStop = StopByNodeID(dest);
+    if (!sourceStop || !destStop) {
+        return false;
+    }
+
+    CBusSystem::TStopID srcID = sourceStop->ID();
+    CBusSystem::TStopID destID = destStop->ID();
+
+    for (std::size_t i = 0; i < DImplementation->busSystemPtr->RouteCount(); ++i) {
+        auto route = DImplementation->busSystemPtr->RouteByIndex(i);
+        if (route) {
+            bool hasSrc = false, hasDest = false;
+            for (std::size_t j = 0; j < route->StopCount(); ++j) {
+                if (route->GetStopID(j) == srcID)
+                    hasSrc = true;
+                if (route->GetStopID(j) == destID)
+                    hasDest = true;
+                if (hasSrc && hasDest) {
+                    routes.insert(route);
+                    break;
+                }
+            }
+        }
+    }
+    return routes.size() > 0;
 }
 
 // Return true if there is a route between two node IDs.
 bool CBusSystemIndexer::RouteBetweenNodeIDs(TNodeID src, TNodeID dest) const noexcept {
-    return DImplementation->RouteBetweenNodeIDs(src, dest);
+    std::unordered_set<std::shared_ptr<CBusSystem::SRoute>> tempRoutes;
+    return RoutesByNodeIDs(src, dest, tempRoutes);
 }
 
 // Definitions of SImplementation functions
 CBusSystemIndexer::SImplementation::SImplementation(std::shared_ptr<CBusSystem> bs)
     : busSystemPtr(bs) {}
 
-std::size_t CBusSystemIndexer::SImplementation::StopCount() const {
+/*std::size_t CBusSystemIndexer::SImplementation::StopCount() const {
     return busSystemPtr->StopCount();
 }
 
-std::size_t CBusSystemIndexer::SImplementation::RouteCount() const {
+/*std::size_t CBusSystemIndexer::SImplementation::RouteCount() const {
     return busSystemPtr->RouteCount();
 }
 
-std::shared_ptr<CBusSystem::SStop> CBusSystemIndexer::SImplementation::SortedStopByIndex(std::size_t idx) const {
+/*std::shared_ptr<CBusSystem::SStop> CBusSystemIndexer::SImplementation::SortedStopByIndex(std::size_t idx) const {
     if (idx >= busSystemPtr->StopCount())
         return nullptr;
     std::vector<CBusSystem::TStopID> sortedStopIDs;
@@ -109,7 +166,7 @@ std::shared_ptr<CBusSystem::SStop> CBusSystemIndexer::SImplementation::SortedSto
     return nullptr;
 }
 
-std::shared_ptr<CBusSystem::SRoute> CBusSystemIndexer::SImplementation::SortedRouteByIndex(std::size_t idx) const {
+/*std::shared_ptr<CBusSystem::SRoute> CBusSystemIndexer::SImplementation::SortedRouteByIndex(std::size_t idx) const {
     if (busSystemPtr->RouteCount() < idx) {
         return nullptr;
     }
@@ -170,3 +227,4 @@ bool CBusSystemIndexer::SImplementation::RouteBetweenNodeIDs(TNodeID src, TNodeI
     std::unordered_set<std::shared_ptr<CBusSystem::SRoute>> tempRoutes;
     return RoutesByNodeIDs(src, dest, tempRoutes);
 }
+*/
